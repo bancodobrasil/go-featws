@@ -1,7 +1,7 @@
-testdata/conf_out.ini
+testdata/conf_out.featws
 ini.sublime-project
 ini.sublime-workspace
-testdata/conf_reflect.ini
+testdata/conf_reflect.featws
 .idea
 /.vscode
 .DS_Store

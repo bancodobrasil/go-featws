@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package ini
+package featws
 
 func inSlice(str string, s []string) bool {
 	for _, v := range s {

@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package ini
+package featws
 
 import (
 	"bufio"
@@ -118,7 +118,7 @@ func (p *parser) readUntil(delim byte) ([]byte, error) {
 }
 
 func cleanComment(in []byte) ([]byte, bool) {
-	i := bytes.IndexAny(in, "#;")
+	i := bytes.IndexAny(in, ";")
 	if i == -1 {
 		return nil, false
 	}
@@ -272,13 +272,9 @@ func (p *parser) readValue(in []byte, bufferSize int) (string, error) {
 	if !p.options.IgnoreInlineComment {
 		var i int
 		if p.options.SpaceBeforeInlineComment {
-			i = strings.Index(line, " #")
-			if i == -1 {
-				i = strings.Index(line, " ;")
-			}
-
+			i = strings.Index(line, " ;")
 		} else {
-			i = strings.IndexAny(line, "#;")
+			i = strings.IndexAny(line, ";")
 		}
 
 		if i > -1 {
@@ -294,7 +290,6 @@ func (p *parser) readValue(in []byte, bufferSize int) (string, error) {
 		line = line[1 : len(line)-1]
 	} else if len(valQuote) == 0 && p.options.UnescapeValueCommentSymbols {
 		line = strings.ReplaceAll(line, `\;`, ";")
-		line = strings.ReplaceAll(line, `\#`, "#")
 	} else if p.options.AllowPythonMultilineValues && lastChar == '\n' {
 		return p.readPythonMultilines(line, bufferSize)
 	}
@@ -413,11 +408,51 @@ func (f *File) parse(reader io.Reader) (err error) {
 		}
 
 		// Comments
-		if line[0] == '#' || line[0] == ';' {
+		if line[0] == ';' {
 			// Note: we do not care ending line break,
 			// it is needed for adding second line,
 			// so just clean it once at the end when set to value.
 			p.comment.Write(line)
+			continue
+		}
+
+		// Array
+		if line[0] == '[' && line[1] == '[' {
+			// Read to the next ']' (TODO: support quoted strings)
+			closeIdx := bytes.LastIndexByte(line, ']')
+			if closeIdx == -1 || line[closeIdx-1] != ']' {
+				return fmt.Errorf("unclosed array: %s", line)
+			}
+
+			name := string(line[1:closeIdx])
+			arr := f.Array(name)
+
+			comment, has := cleanComment(line[closeIdx+1:])
+			if has {
+				p.comment.Write(comment)
+			}
+
+			arr.Comment = strings.TrimSpace(p.comment.String())
+
+			// Reset auto-counter and comments
+			p.comment.Reset()
+			p.count = 1
+			// // Nested values can't span sections
+			// isLastValueEmpty = false
+
+			// inUnparseableSection = false
+			// for i := range f.options.UnparseableSections {
+			// 	if f.options.UnparseableSections[i] == name ||
+			// 		((f.options.Insensitive || f.options.InsensitiveSections) && strings.EqualFold(f.options.UnparseableSections[i], name)) {
+			// 		inUnparseableSection = true
+			// 		continue
+			// 	}
+			// }
+			section, err = arr.NewItem()
+			if err != nil {
+				return err
+			}
+
 			continue
 		}
 

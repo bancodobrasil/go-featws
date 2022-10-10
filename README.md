@@ -1,13 +1,15 @@
-# INI
+# Go FeatWS
 
-[![GitHub Workflow Status](https://img.shields.io/github/checks-status/go-ini/ini/main?logo=github&style=for-the-badge)](https://github.com/go-ini/ini/actions?query=branch%3Amain)
-[![codecov](https://img.shields.io/codecov/c/github/go-ini/ini/master?logo=codecov&style=for-the-badge)](https://codecov.io/gh/go-ini/ini)
-[![GoDoc](https://img.shields.io/badge/GoDoc-Reference-blue?style=for-the-badge&logo=go)](https://pkg.go.dev/github.com/go-ini/ini?tab=doc)
-[![Sourcegraph](https://img.shields.io/badge/view%20on-Sourcegraph-brightgreen.svg?style=for-the-badge&logo=sourcegraph)](https://sourcegraph.com/github.com/go-ini/ini)
+Forked from [Ini](go-ini/ini)
 
-![](https://avatars0.githubusercontent.com/u/10216035?v=3&s=200)
+[![GitHub Workflow Status](https://img.shields.io/github/checks-status/bancodobrasil/go-featws/main?logo=github&style=for-the-badge)](https://github.com/bancodobrasil/go-featws/actions?query=branch%3Amain)
+[![codecov](https://img.shields.io/codecov/c/github/bancodobrasil/go-featws/master?logo=codecov&style=for-the-badge)](https://codecov.io/gh/bancodobrasil/go-featws)
+[![GoDoc](https://img.shields.io/badge/GoDoc-Reference-blue?style=for-the-badge&logo=go)](https://pkg.go.dev/github.com/bancodobrasil/go-featws?tab=doc)
+[![Sourcegraph](https://img.shields.io/badge/view%20on-Sourcegraph-brightgreen.svg?style=for-the-badge&logo=sourcegraph)](https://sourcegraph.com/github.com/bancodobrasil/go-featws)
 
-Package ini provides INI file read and write functionality in Go.
+<!--![](https://avatars0.githubusercontent.com/u/10216035?v=3&s=200) -->
+
+Package go-featws provides FeatWS file read and write functionality in Go.
 
 ## Features
 
@@ -27,16 +29,14 @@ Package ini provides INI file read and write functionality in Go.
 The minimum requirement of Go is **1.13**.
 
 ```sh
-$ go get gopkg.in/ini.v1
+$ go get github.com/bancodobrasil/go-featws
 ```
 
 Please add `-u` flag to update in the future.
 
 ## Getting Help
 
-- [Getting Started](https://ini.unknwon.io/docs/intro/getting_started)
-- [API Documentation](https://gowalker.org/gopkg.in/ini.v1)
-- 中国大陆镜像：https://ini.unknwon.cn
+- [Getting Started](https://github.com/bancodobrasil/featws-transpiler)
 
 ## License
 

@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package ini
+package featws
 
 import (
 	"bytes"
@@ -311,7 +311,7 @@ func TestFile_Sections(t *testing.T) {
 	require.NotNil(t, f)
 
 	secs := f.Sections()
-	names := []string{DefaultSection, "author", "package", "package.sub", "features", "types", "array", "note", "comments", "string escapes", "advance"}
+	names := []string{DefaultSection, "author", "package", "package.sub", "features", "types", "array", "note", "comments", "string escapes", "advance", "[array]0", "[array]1"}
 	assert.Len(t, secs, len(names))
 	for i, name := range names {
 		assert.Equal(t, name, secs[i].Name())
@@ -342,7 +342,7 @@ func TestFile_SectionStrings(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, f)
 
-	assert.Equal(t, []string{DefaultSection, "author", "package", "package.sub", "features", "types", "array", "note", "comments", "string escapes", "advance"}, f.SectionStrings())
+	assert.Equal(t, []string{DefaultSection, "author", "package", "package.sub", "features", "types", "array", "note", "comments", "string escapes", "advance", "[array]0", "[array]1"}, f.SectionStrings())
 }
 
 func TestFile_DeleteSection(t *testing.T) {
@@ -410,7 +410,7 @@ func TestFile_WriteTo(t *testing.T) {
 		require.NotNil(t, f)
 
 		f.Section("author").Comment = `Information about package author
-# Bio can be written in multiple lines.`
+; Bio can be written in multiple lines.`
 		f.Section("author").Key("NAME").Comment = "This is author name"
 		_, _ = f.Section("note").NewBooleanKey("boolean_key")
 		_, _ = f.Section("note").NewKey("more", "notes")
@@ -431,10 +431,10 @@ func TestFile_WriteTo(t *testing.T) {
 
 	t.Run("support multiline comments", func(t *testing.T) {
 		f, err := Load([]byte(`
-# 
-# general.domain
-# 
-# Domain name of XX system.
+; 
+; general.domain
+; 
+; Domain name of XX system.
 domain      = mydomain.com
 `))
 		require.NoError(t, err)
@@ -445,10 +445,10 @@ domain      = mydomain.com
 		_, err = f.WriteTo(&buf)
 		require.NoError(t, err)
 
-		assert.Equal(t, `# 
-# general.domain
-# 
-# Domain name of XX system.
+		assert.Equal(t, `; 
+; general.domain
+; 
+; Domain name of XX system.
 domain = mydomain.com
 ; Multiline
 ; Comment
@@ -481,8 +481,8 @@ func TestFile_SaveTo(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, f)
 
-	assert.NoError(t, f.SaveTo("testdata/conf_out.ini"))
-	assert.NoError(t, f.SaveToIndent("testdata/conf_out.ini", "\t"))
+	assert.NoError(t, f.SaveTo("testdata/conf_out.featws"))
+	assert.NoError(t, f.SaveToIndent("testdata/conf_out.featws", "\t"))
 }
 
 func TestFile_WriteToWithOutputDelimiter(t *testing.T) {
