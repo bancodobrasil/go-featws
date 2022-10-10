@@ -38,6 +38,10 @@ Please add `-u` flag to update in the future.
 
 - [Getting Started](https://github.com/bancodobrasil/featws-transpiler)
 
+## Creator
+
+[Raphael Pinto](https://github.com/ralphg6)
+
 ## License
 
 This project is under Apache v2 License. See the [LICENSE](LICENSE) file for the full license text.
