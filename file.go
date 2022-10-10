@@ -43,6 +43,8 @@ type File struct {
 	// Actual data is stored here.
 	sections map[string][]*Section
 
+	arrays map[string]*Array
+
 	NameMapper
 	ValueMapper
 }
@@ -63,6 +65,7 @@ func newFile(dataSources []dataSource, opts LoadOptions) *File {
 		BlockMode:   true,
 		dataSources: dataSources,
 		sections:    make(map[string][]*Section),
+		arrays:      make(map[string]*Array),
 		options:     opts,
 	}
 }
@@ -77,6 +80,27 @@ func Empty(opts ...LoadOptions) *File {
 	// Ignore error here, we are sure our data is good.
 	f, _ := LoadSources(opt, []byte(""))
 	return f
+}
+
+// NewArray creates a new section.
+func (f *File) NewArray(name string) (*Array, error) {
+	if len(name) == 0 {
+		return nil, errors.New("empty array name")
+	}
+
+	if (f.options.Insensitive || f.options.InsensitiveSections) && name != DefaultSection {
+		name = strings.ToLower(name)
+	}
+
+	if f.BlockMode {
+		f.lock.Lock()
+		defer f.lock.Unlock()
+	}
+
+	arr := newArray(f, name)
+	f.arrays[name] = arr
+
+	return arr, nil
 }
 
 // NewSection creates a new section.
@@ -349,7 +373,7 @@ func (f *File) writeToBuffer(indent string) (*bytes.Buffer, error) {
 			// Support multiline comments
 			lines := strings.Split(sec.Comment, LineBreak)
 			for i := range lines {
-				if lines[i][0] != '#' && lines[i][0] != ';' {
+				if lines[i][0] != ';' {
 					lines[i] = "; " + lines[i]
 				} else {
 					lines[i] = lines[i][:1] + " " + strings.TrimSpace(lines[i][1:])
@@ -362,6 +386,10 @@ func (f *File) writeToBuffer(indent string) (*bytes.Buffer, error) {
 		}
 
 		if i > 0 || DefaultHeader || (i == 0 && strings.ToUpper(sec.name) != DefaultSection) {
+			if sname[0] == '[' {
+				idx := strings.LastIndex(sname, "]")
+				sname = sname[:idx+1]
+			}
 			if _, err := buf.WriteString("[" + sname + "]" + LineBreak); err != nil {
 				return nil, err
 			}
@@ -419,7 +447,7 @@ func (f *File) writeToBuffer(indent string) (*bytes.Buffer, error) {
 				// Support multiline comments
 				lines := strings.Split(key.Comment, LineBreak)
 				for i := range lines {
-					if lines[i][0] != '#' && lines[i][0] != ';' {
+					if lines[i][0] != ';' {
 						lines[i] = "; " + strings.TrimSpace(lines[i])
 					} else {
 						lines[i] = lines[i][:1] + " " + strings.TrimSpace(lines[i][1:])
@@ -459,10 +487,10 @@ func (f *File) writeToBuffer(indent string) (*bytes.Buffer, error) {
 					buf.Write(alignSpaces[:alignLength-len(kname)])
 				}
 
-				// In case key value contains "\n", "`", "\"", "#" or ";"
+				// In case key value contains "\n", "`", "\"" or ";"
 				if strings.ContainsAny(val, "\n`") {
 					val = `"""` + val + `"""`
-				} else if !f.options.IgnoreInlineComment && strings.ContainsAny(val, "#;") {
+				} else if !f.options.IgnoreInlineComment && strings.ContainsAny(val, ";") {
 					val = "`" + val + "`"
 				} else if len(strings.TrimSpace(val)) != len(val) {
 					val = `"` + val + `"`
@@ -538,4 +566,48 @@ func (f *File) SaveToIndent(filename, indent string) error {
 // SaveTo writes content to file system.
 func (f *File) SaveTo(filename string) error {
 	return f.SaveToIndent(filename, "")
+}
+
+// GetArray returns section by given name.
+func (f *File) GetArray(name string) *Array {
+	arr, _ := f.ArrayByName(name)
+	return arr
+}
+
+// HasArray returns true if the file contains a section with given name.
+func (f *File) HasArray(name string) bool {
+	section := f.GetArray(name)
+	return section != nil
+}
+
+// ArrayByName returns all sections with given name.
+func (f *File) ArrayByName(name string) (*Array, error) {
+	if len(name) == 0 {
+		return nil, fmt.Errorf("no name for array")
+	}
+	if f.options.Insensitive || f.options.InsensitiveSections {
+		name = strings.ToLower(name)
+	}
+
+	if f.BlockMode {
+		f.lock.RLock()
+		defer f.lock.RUnlock()
+	}
+
+	arr := f.arrays[name]
+	if arr == nil {
+		return nil, nil
+	}
+
+	return arr, nil
+}
+
+// Array assumes named section exists and returns a zero-value when not.
+func (f *File) Array(name string) *Array {
+	arr := f.GetArray(name)
+	if arr == nil {
+		arr, _ = f.NewArray(name)
+		return arr
+	}
+	return arr
 }

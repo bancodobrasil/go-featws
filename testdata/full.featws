@@ -5,8 +5,8 @@ VERSION     = v1
 ; Package import path
 IMPORT_PATH = gopkg.in/%(NAME)s.%(VERSION)s
 
-# Information about package author
-# Bio can be written in multiple lines.
+; Information about package author
+; Bio can be written in multiple lines.
 [author]
 NAME   = Unknwon
 E-MAIL = u@gogs.io
@@ -14,7 +14,7 @@ GITHUB = https://github.com/%(NAME)s
 BIO    = """Gopher.
 Coding addict.
 Good man.
-"""  # Succeeding comment
+"""  ; Succeeding comment
 
 [package]
 CLONE_URL = https://%(IMPORT_PATH)s
@@ -67,7 +67,7 @@ key6 = aaa bbb\ and\ space ccc
 [advance]
 value with quotes      = "some value"
 value quote2 again     = 'some value'
-includes comment sign  = `my#password`
+includes comment sign  = `my;password`
 includes comment sign2 = `my;password`
 true                   = 2+3=5
 "1+1=2"                = true
@@ -79,7 +79,16 @@ ADDRESS                = `404 road,
 NotFound, State, 50000`
 two_lines = how about \
 	continuation lines?
+non_comment_with_hash = #test1 && $test2
 lots_of_lines = 1 \
 	2 \
 	3 \
 	4 \
+
+[[array]]
+item1_key1 = item1_value1
+item1_key2 = item1_value2
+
+[[array]]
+item2_key1 = item2_value1
+item2_key2 = item2_value2

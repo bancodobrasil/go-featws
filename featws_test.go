@@ -35,8 +35,8 @@ const (
 	; Package import path
 	IMPORT_PATH = gopkg.in/%(NAME)s.%(VERSION)s
 	
-	# Information about package author
-	# Bio can be written in multiple lines.
+	; Information about package author
+	; Bio can be written in multiple lines.
 	[author]
 	NAME   = Unknwon  ; Succeeding comment
 	E-MAIL = fake@localhost
@@ -45,9 +45,9 @@ const (
 	Coding addict.
 	Good man.
 	"""  # Succeeding comment`
-	minimalConf  = "testdata/minimal.ini"
-	fullConf     = "testdata/full.ini"
-	notFoundConf = "testdata/404.ini"
+	minimalConf  = "testdata/minimal.featws"
+	fullConf     = "testdata/full.featws"
+	notFoundConf = "testdata/404.featws"
 )
 
 var update = flag.Bool("update", false, "Update .golden files")
@@ -55,8 +55,8 @@ var update = flag.Bool("update", false, "Update .golden files")
 func TestLoad(t *testing.T) {
 	t.Run("load from good data sources", func(t *testing.T) {
 		f, err := Load(
-			"testdata/minimal.ini",
-			[]byte("NAME = ini\nIMPORT_PATH = gopkg.in/%(NAME)s.%(VERSION)s"),
+			"testdata/minimal.featws",
+			[]byte("NAME = go-featws\nIMPORT_PATH = github.com/bancodobrasil/%(NAME)s.%(VERSION)s"),
 			bytes.NewReader([]byte(`VERSION = v1`)),
 			ioutil.NopCloser(bytes.NewReader([]byte("[author]\nNAME = Unknwon"))),
 		)
@@ -65,9 +65,9 @@ func TestLoad(t *testing.T) {
 
 		// Validate values make sure all sources are loaded correctly
 		sec := f.Section("")
-		assert.Equal(t, "ini", sec.Key("NAME").String())
+		assert.Equal(t, "go-featws", sec.Key("NAME").String())
 		assert.Equal(t, "v1", sec.Key("VERSION").String())
-		assert.Equal(t, "gopkg.in/ini.v1", sec.Key("IMPORT_PATH").String())
+		assert.Equal(t, "github.com/bancodobrasil/go-featws.v1", sec.Key("IMPORT_PATH").String())
 
 		sec = f.Section("author")
 		assert.Equal(t, "Unknwon", sec.Key("NAME").String())
@@ -86,10 +86,10 @@ func TestLoad(t *testing.T) {
 		})
 	})
 
-	t.Run("cannot properly parse INI files containing `#` or `;` in value", func(t *testing.T) {
+	t.Run("cannot properly parse INI files containing `;` in value", func(t *testing.T) {
 		f, err := Load([]byte(`
 	[author]
-	NAME = U#n#k#n#w#o#n
+	NAME = U;n;k;n;w;o;n
 	GITHUB = U;n;k;n;w;o;n
 	`))
 		require.NoError(t, err)
@@ -404,26 +404,26 @@ key2=c\d\`))
 				IgnoreInlineComment:        true,
 			}, []byte(`
 key1=value ;comment
-key2=value2 #comment2
-key3=val#ue #comment3`))
+key2=value2 ;comment2
+key3=val;ue ;comment3`))
 			require.NoError(t, err)
 			require.NotNil(t, f)
 
 			assert.Equal(t, `value ;comment`, f.Section("").Key("key1").String())
-			assert.Equal(t, `value2 #comment2`, f.Section("").Key("key2").String())
-			assert.Equal(t, `val#ue #comment3`, f.Section("").Key("key3").String())
+			assert.Equal(t, `value2 ;comment2`, f.Section("").Key("key2").String())
+			assert.Equal(t, `val;ue ;comment3`, f.Section("").Key("key3").String())
 
 			t.Run("inverse case", func(t *testing.T) {
 				f, err := LoadSources(LoadOptions{AllowPythonMultilineValues: true}, []byte(`
 key1=value ;comment
-key2=value2 #comment2`))
+key2=value2 ;comment2`))
 				require.NoError(t, err)
 				require.NotNil(t, f)
 
 				assert.Equal(t, `value`, f.Section("").Key("key1").String())
 				assert.Equal(t, `;comment`, f.Section("").Key("key1").Comment)
 				assert.Equal(t, `value2`, f.Section("").Key("key2").String())
-				assert.Equal(t, `#comment2`, f.Section("").Key("key2").Comment)
+				assert.Equal(t, `;comment2`, f.Section("").Key("key2").Comment)
 			})
 		})
 
@@ -458,7 +458,7 @@ BiomeGroup(IceBiomes, 4, 85, Ice Plains)
 				AllowBooleanKeys:           true,
 			}, []byte(`
 key1=hello
-#key2
+;key2
 key3`))
 			require.NoError(t, err)
 			require.NotNil(t, f)
@@ -471,7 +471,7 @@ key3`))
 				_, err := f.WriteTo(&buf)
 				require.NoError(t, err)
 				assert.Equal(t, `key1 = hello
-# key2
+; key2
 key3
 `,
 					buf.String(),
@@ -481,7 +481,7 @@ key3
 			t.Run("inverse case", func(t *testing.T) {
 				_, err := LoadSources(LoadOptions{AllowPythonMultilineValues: true}, []byte(`
 key1=hello
-#key2
+;key2
 key3`))
 				require.Error(t, err)
 			})
@@ -862,12 +862,12 @@ my lesson state data – 1111111111111111111000000000000000001110000
 		})
 
 		t.Run("and false `SpaceBeforeInlineComment`", func(t *testing.T) {
-			t.Run("cannot parse INI files containing `#` or `;` in value", func(t *testing.T) {
+			t.Run("cannot parse INI files containing `;` in value", func(t *testing.T) {
 				f, err := LoadSources(
 					LoadOptions{AllowPythonMultilineValues: false, SpaceBeforeInlineComment: false},
 					[]byte(`
 [author]
-NAME = U#n#k#n#w#o#n
+NAME = U;n;k;n;w;o;n
 GITHUB = U;n;k;n;w;o;n
 `))
 				require.NoError(t, err)
@@ -881,12 +881,12 @@ GITHUB = U;n;k;n;w;o;n
 		})
 
 		t.Run("and true `SpaceBeforeInlineComment`", func(t *testing.T) {
-			t.Run("can parse INI files containing `#` or `;` in value", func(t *testing.T) {
+			t.Run("can parse INI files containing `;` in value", func(t *testing.T) {
 				f, err := LoadSources(
 					LoadOptions{AllowPythonMultilineValues: false, SpaceBeforeInlineComment: true},
 					[]byte(`
 [author]
-NAME = U#n#k#n#w#o#n
+NAME = U;n;k;n;w;o;n
 GITHUB = U;n;k;n;w;o;n
 `))
 				require.NoError(t, err)
@@ -894,7 +894,7 @@ GITHUB = U;n;k;n;w;o;n
 				sec := f.Section("author")
 				nameValue := sec.Key("NAME").String()
 				githubValue := sec.Key("GITHUB").String()
-				assert.Equal(t, "U#n#k#n#w#o#n", nameValue)
+				assert.Equal(t, "U;n;k;n;w;o;n", nameValue)
 				assert.Equal(t, "U;n;k;n;w;o;n", githubValue)
 			})
 		})
@@ -981,26 +981,26 @@ key2=c\d\`))
 				IgnoreInlineComment:        true,
 			}, []byte(`
 key1=value ;comment
-key2=value2 #comment2
-key3=val#ue #comment3`))
+key2=value2 ;comment2
+key3=val;ue ;comment3`))
 			require.NoError(t, err)
 			require.NotNil(t, f)
 
 			assert.Equal(t, `value ;comment`, f.Section("").Key("key1").String())
-			assert.Equal(t, `value2 #comment2`, f.Section("").Key("key2").String())
-			assert.Equal(t, `val#ue #comment3`, f.Section("").Key("key3").String())
+			assert.Equal(t, `value2 ;comment2`, f.Section("").Key("key2").String())
+			assert.Equal(t, `val;ue ;comment3`, f.Section("").Key("key3").String())
 
 			t.Run("inverse case", func(t *testing.T) {
 				f, err := LoadSources(LoadOptions{AllowPythonMultilineValues: false}, []byte(`
 key1=value ;comment
-key2=value2 #comment2`))
+key2=value2 ;comment2`))
 				require.NoError(t, err)
 				require.NotNil(t, f)
 
 				assert.Equal(t, `value`, f.Section("").Key("key1").String())
 				assert.Equal(t, `;comment`, f.Section("").Key("key1").Comment)
 				assert.Equal(t, `value2`, f.Section("").Key("key2").String())
-				assert.Equal(t, `#comment2`, f.Section("").Key("key2").Comment)
+				assert.Equal(t, `;comment2`, f.Section("").Key("key2").Comment)
 			})
 		})
 
@@ -1010,7 +1010,7 @@ key2=value2 #comment2`))
 				AllowBooleanKeys:           true,
 			}, []byte(`
 key1=hello
-#key2
+;key2
 key3`))
 			require.NoError(t, err)
 			require.NotNil(t, f)
@@ -1023,7 +1023,7 @@ key3`))
 				_, err := f.WriteTo(&buf)
 				require.NoError(t, err)
 				assert.Equal(t, `key1 = hello
-# key2
+; key2
 key3
 `,
 					buf.String(),
@@ -1033,7 +1033,7 @@ key3
 			t.Run("inverse case", func(t *testing.T) {
 				_, err := LoadSources(LoadOptions{AllowPythonMultilineValues: false}, []byte(`
 key1=hello
-#key2
+;key2
 key3`))
 				require.Error(t, err)
 			})
@@ -1300,12 +1300,12 @@ my lesson state data – 1111111111111111111000000000000000001110000
 		})
 
 		t.Run("and false `SpaceBeforeInlineComment`", func(t *testing.T) {
-			t.Run("cannot parse INI files containing `#` or `;` in value", func(t *testing.T) {
+			t.Run("cannot parse INI files containing `;` in value", func(t *testing.T) {
 				f, err := LoadSources(
 					LoadOptions{AllowPythonMultilineValues: true, SpaceBeforeInlineComment: false},
 					[]byte(`
 [author]
-NAME = U#n#k#n#w#o#n
+NAME = U;n;k;n;w;o;n
 GITHUB = U;n;k;n;w;o;n
 `))
 				require.NoError(t, err)
@@ -1319,12 +1319,12 @@ GITHUB = U;n;k;n;w;o;n
 		})
 
 		t.Run("and true `SpaceBeforeInlineComment`", func(t *testing.T) {
-			t.Run("can parse INI files containing `#` or `;` in value", func(t *testing.T) {
+			t.Run("can parse INI files containing `;` in value", func(t *testing.T) {
 				f, err := LoadSources(
 					LoadOptions{AllowPythonMultilineValues: true, SpaceBeforeInlineComment: true},
 					[]byte(`
 [author]
-NAME = U#n#k#n#w#o#n
+NAME = U;n;k;n;w;o;n
 GITHUB = U;n;k;n;w;o;n
 `))
 				require.NoError(t, err)
@@ -1332,7 +1332,7 @@ GITHUB = U;n;k;n;w;o;n
 				sec := f.Section("author")
 				nameValue := sec.Key("NAME").String()
 				githubValue := sec.Key("GITHUB").String()
-				assert.Equal(t, "U#n#k#n#w#o#n", nameValue)
+				assert.Equal(t, "U;n;k;n;w;o;n", nameValue)
 				assert.Equal(t, "U;n;k;n;w;o;n", githubValue)
 			})
 		})
@@ -1513,7 +1513,7 @@ func TestPythonMultiline(t *testing.T) {
 		t.Skip("Skipping testing on Windows")
 	}
 
-	path := filepath.Join("testdata", "multiline.ini")
+	path := filepath.Join("testdata", "multiline.featws")
 	f, err := LoadSources(LoadOptions{
 		AllowPythonMultilineValues: true,
 		ReaderBufferSize:           64 * 1024,
@@ -1562,7 +1562,7 @@ func TestPythonMultiline_EOF(t *testing.T) {
 		t.Skip("Skipping testing on Windows")
 	}
 
-	path := filepath.Join("testdata", "multiline_eof.ini")
+	path := filepath.Join("testdata", "multiline_eof.featws")
 	f, err := LoadSources(LoadOptions{
 		AllowPythonMultilineValues: true,
 		ReaderBufferSize:           64 * 1024,
