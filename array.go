@@ -83,3 +83,14 @@ func (a *Array) ChildSections() []*Section {
 	}
 	return children
 }
+
+// ArrayStrings assumes named section exists and returns a zero-value when not.
+func (f *File) ArrayStrings() []string {
+	list := make([]string, 0)
+
+	for k := range f.arrays {
+		list = append(list, k)
+	}
+
+	return list
+}
