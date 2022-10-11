@@ -84,13 +84,11 @@ func (a *Array) ChildSections() []*Section {
 	return children
 }
 
-// ArrayStrings assumes named section exists and returns a zero-value when not.
-func (f *File) ArrayStrings() []string {
-	list := make([]string, 0)
-
-	for k := range f.arrays {
-		list = append(list, k)
+// Sections returns a list of Section stored in the current instance.
+func (a *Array) Sections() []*Section {
+	if a.f.BlockMode {
+		a.f.lock.RLock()
+		defer a.f.lock.RUnlock()
 	}
-
-	return list
+	return a.sections
 }
